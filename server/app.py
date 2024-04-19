@@ -17,7 +17,54 @@ db.init_app(app)
 api = Api(app)
 
 class Home(Resource):
-    pass
+    def get(self):
+        response_dict = {
+            "message" : "Welcome to the Newsletter RESTFul API",
+        }
+        status_code = 200
+
+        return make_response(response_dict, status_code )
+
+api.add_resource(Home, '/')
+
+class Newsletters(Resource):
+    def get(self):
+        response_dict_list = [n.to_dict() for n in Newsletter.query.all()]
+        status_code = 200
+
+        return make_response(response_dict_list, status_code)
+    
+    def post(self):
+        data = request.get_json()
+        new_record = Newsletter(
+            title=data['title'],
+            body=data['body']
+        )
+
+        db.session.add(new_record)
+        db.session.commit()
+
+        return make_response(new_record.to_dict(), 201)
+
+api.add_resource(Newsletters, '/newsletters')
+
+class NewsletterByID(Resource):
+    def get(self, id):
+        response_dict = Newsletter.query.filter_by(id=id).first().to_dict()
+        return make_response(response_dict, 200)
+
+    # def patch(self, id):
+    #     response_dict = Newsletter.query.filter_by(id=id).first()
+    #     data = request.get_json()
+    #     for attr in response_dict:
+    #         setattr(response_dict, attr, data[attr])
+        
+    #     db.session.add(response_dict)
+    #     db.session.commit()
+
+    #     return make_response(response_dict, 200)
+
+api.add_resource(NewsletterByID, '/newsletters/<int:id>')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
